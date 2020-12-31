@@ -81,6 +81,42 @@ if($resultedsignature == $recieved_signature) {
         } else {
             print_r($errors);
         }
+   } else {
+        $id = $_POST["id"];
+        $user_id = $_POST["user_id"];
+        
+        $nombre = $_POST["nombre_recepcion"];
+        $apellido = $_POST["apellido_recepcion"];
+        $rut = $_POST["rut_recepcion"];
+
+        $sql = "UPDATE despachos 
+                SET entregado = 1
+                WHERE numero_seguimiento = '$id'";
+        
+        if ($conn->query($sql) === TRUE) {
+            $sql = "SELECT id FROM despachos WHERE numero_seguimiento = '$id';";
+            $result = $conn->query($sql);
+            if ($result->num_rows > 0) {
+              while($row = $result->fetch_assoc()) {
+                    $estado = "ENTREGADO";
+                    $fk_id_despacho = $row["id"];
+                    $sql = "INSERT INTO seguimiento (fecha, estado, foto, fk_id_despacho, nombre_recepcion, apellido_recepcion, rut_recepcion) VALUES (NOW(), '$estado', null, $fk_id_despacho, '$nombre', '$apellido', '$rut')";
+                    $conn -> query($sql);
+                    sendMail($fk_id_despacho, $estado, null);
+                }
+            }
+            $myObj->status = 1;
+            $myObj->mesagge = "La entrega del despacho se ha actualizado correctamente.";
+            $myJSON = json_encode($myObj);
+            echo $myJSON;
+        } else {
+            $myObj->status = 0;
+            $myObj->mesagge = "Ocurrió un problema al actualizar el retiro.";
+            $myJSON = json_encode($myObj);
+            echo $myJSON;
+        }
+        
+        $conn->close();
    }
 } else {
     echo "No permitido";
@@ -508,7 +544,7 @@ function sendMail($id_despacho, $estado, $foto)
 
                 $mail->send();
             } catch (Exception $e) {
-                echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
+                // echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
             }
         }
     }
