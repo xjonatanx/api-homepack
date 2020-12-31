@@ -29,14 +29,25 @@
         
         $search = $_GET['search'];
         $despachos = array();
+        $inicio = $_GET["inicio"];
+        $fin = $_GET["fin"];
         
         if($perfil == "admin") {
+            
+            $filter_date = "";
+            
+            if($inicio != "null" && $fin != "null") {
+                $filter_date = "DATE(despachos.fecha_ingreso) >= '$inicio' AND DATE(despachos.fecha_ingreso) <= '$fin' AND ";
+            } else {
+                $filter_date = "";
+            }
+            
             $count = $conn->query("
             SELECT COUNT(*) AS countDespachos 
             FROM despachos 
             LEFT JOIN usuarios
             ON despachos.id_chofer = usuarios.id
-            WHERE despachos.retirado = 1 AND despachos.centro_distribucion = 1 AND despachos.a_destino = 1 AND despachos.entregado = 1 AND despachos.sobrancia = 0 AND (usuarios.nombre LIKE '%$search%' OR despachos.orden_compra LIKE '%$search%' OR despachos.numero_seguimiento LIKE '%$search%');");
+            WHERE $filter_date despachos.retirado = 1 AND despachos.centro_distribucion = 1 AND despachos.a_destino = 1 AND despachos.entregado = 1 AND despachos.sobrancia = 0 AND (usuarios.nombre LIKE '%$search%' OR despachos.orden_compra LIKE '%$search%' OR despachos.numero_seguimiento LIKE '%$search%');");
             $fila = $count->fetch_assoc();
             $total = $fila['countDespachos'];
             
@@ -70,12 +81,21 @@
             FROM despachos 
             LEFT JOIN usuarios
             ON despachos.id_chofer = usuarios.id
-            WHERE despachos.retirado = 1 AND despachos.centro_distribucion = 1 AND despachos.a_destino = 1 AND despachos.entregado = 1 AND despachos.sobrancia = 0 AND (usuarios.nombre LIKE '%$search%' OR despachos.orden_compra LIKE '%$search%'  OR despachos.numero_seguimiento LIKE '%$search%') 
-            ORDER BY fecha_ingreso DESC
+            WHERE $filter_date despachos.retirado = 1 AND despachos.centro_distribucion = 1 AND despachos.a_destino = 1 AND despachos.entregado = 1 AND despachos.sobrancia = 0 AND (usuarios.nombre LIKE '%$search%' OR despachos.orden_compra LIKE '%$search%'  OR despachos.numero_seguimiento LIKE '%$search%') 
+            ORDER BY despachos.fecha_ingreso DESC, usuarios.nombre
             LIMIT $offset, $no_of_records_per_page;");
         }
         
         if($perfil == "chofer") {
+            
+            $filter_date = "";
+            
+            if($inicio != "null" && $fin != "null") {
+                $filter_date = "DATE(despachos.fecha_ingreso) >= '$inicio' AND DATE(despachos.fecha_ingreso) <= '$fin' AND ";
+            } else {
+                $filter_date = "";
+            }
+            
             $count = $conn->query("
             SELECT COUNT(*) AS countDespachos 
             FROM despachos 
@@ -115,8 +135,8 @@
             FROM despachos 
             LEFT JOIN usuarios
             ON despachos.id_chofer = usuarios.id
-            WHERE despachos.id_chofer = $id_chofer AND despachos.retirado = 1 AND despachos.centro_distribucion = 1 AND despachos.a_destino = 1 AND despachos.entregado = 1 AND despachos.sobrancia = 0 AND (usuarios.nombre LIKE '%$search%' OR despachos.orden_compra LIKE '%$search%'  OR despachos.numero_seguimiento LIKE '%$search%') 
-            ORDER BY fecha_ingreso DESC
+            WHERE $filter_date despachos.id_chofer = $id_chofer AND despachos.retirado = 1 AND despachos.centro_distribucion = 1 AND despachos.a_destino = 1 AND despachos.entregado = 1 AND despachos.sobrancia = 0 AND (usuarios.nombre LIKE '%$search%' OR despachos.orden_compra LIKE '%$search%'  OR despachos.numero_seguimiento LIKE '%$search%') 
+            ORDER BY despachos.fecha_ingreso DESC
             LIMIT $offset, $no_of_records_per_page;");
         }
     
