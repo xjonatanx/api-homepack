@@ -22,9 +22,11 @@ $resultedsignature = base64_encode(hash_hmac('sha256', $recievedHeaderAndPayload
 $recieved_signature = str_replace(" ", "+", $recieved_signature);
 if($resultedsignature == $recieved_signature) {
     $id = $_POST["id"];
+    $chofer = $_POST["chofer"];
 
     $sql = "UPDATE despachos 
-            SET sobrancia = 0
+            SET sobrancia = 0,
+                id_chofer = $chofer
             WHERE numero_seguimiento = '$id'";
     
     if ($conn->query($sql) === TRUE) {
@@ -467,7 +469,7 @@ function sendMail($id_despacho, $estado)
 
                 $mail->send();
             } catch (Exception $e) {
-                echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
+                // echo "Message could not be sent. Mailer Error: {$mail->ErrorInfo}";
             }
         }
     }
